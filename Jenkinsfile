@@ -1,9 +1,33 @@
-podTemplate(containers: [containerTemplate(name: 'maven', image: 'maven', command: 'sleep', args: 'infinity')]) {
-  node(POD_LABEL) {
-    checkout scm
-    container('maven') {
-      sh 'mvn -B -ntp -Dmaven.test.failure.ignore verify'
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/your-username/Jenkins-Sample-App.git', branch: 'main'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
+        }
     }
-    junit '**/target/surefire-reports/TEST-*.xml'
-  }
+    post {
+        success {
+            echo 'Build succeeded!'
+        }
+        failure {
+            echo 'Build failed!'
+        }
+    }
 }
